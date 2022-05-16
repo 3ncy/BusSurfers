@@ -14,6 +14,9 @@ public class PlayerController : MonoBehaviour
     public float _maxSpeed;
     public float _maxVelocity;
     public Transform _feetPos;
+    private bool _moveLeft;
+    private bool _moveRight;
+    public float _moveSpeed;
 
     [SerializeField] Rigidbody _rigidbody;
     [SerializeField] private Animator _animator;
@@ -27,6 +30,7 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
+        //callback na zvetseni collideru po zkonceni rollu
         _scrollAnimation = _animator.GetBehaviour<ScrollAnimation>();
         _scrollAnimation.OnStateExitEvent += RollEnd;
     }
@@ -75,7 +79,7 @@ public class PlayerController : MonoBehaviour
             //spocitani
             Vector2 diffNormalized = new Vector2(_cursorMovementVector.x / Screen.width, _cursorMovementVector.y / Screen.height);
             //print($"{_cursorMovementVector} | {_cursorMovementVector.x}, {Screen.width}, {_cursorMovementVector.x / Screen.width} | {_cursorMovementVector.y}, {Screen.height}, {_cursorMovementVector.y / Screen.height}");
-            //print(diffNormalized);
+
             //0.2f je nastrel hodnoty, bude potreba jeste poupravit az otestuju na fyz mobilu
             if (diffNormalized.x > 0.2f)
             {
@@ -95,74 +99,27 @@ public class PlayerController : MonoBehaviour
             }
         }
         #endregion
-
-        //todo: jen debug, odstranit
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            if (Random.Range(0, 2) == 1)
-                AudioManager.Instance.ChangeMusic("Max");
-            else
-                AudioManager.Instance.ChangeMusic("Kiki");
-
-        }
     }
 
     private void FixedUpdate()
     {
-        //transform.position += transform.forward * _speed * Time.deltaTime;
-
-        //_rigidbody.AddForce(new Vector3(_rigidbody.velocity.x, _rigidbody.velocity.y, _speed));
-        //_rigidbody.velocity = new Vector3(_rigidbody.velocity.x, _rigidbody.velocity.y, _speed);
-        //_rigidbody.AddForce(new Vector3(0, 0, _speed), ForceMode.VelocityChange);
-        //_rigidbody.AddForce(-transform.up * Time.deltaTime * _gravity);
-        //print(_rigidbody.velocity);
-
-
-        //_rigidbody.velocity = (transform.forward * _speed) + (Physics.gravity * _gravity);
-        //if (_rigidbody.velocity.magnitude <= _maxSpeed)
-        //    _rigidbody.AddRelativeForce(Vector3.forward * _speed);
-
-
-
-        //_rigidbody.AddForce(_maxVelocity - transform.forward * _speed, ForceMode.VelocityChange);
-
-
-        //float speedFactor = (_maxVelocity - _rigidbody.velocity.magnitude) / _maxVelocity;
-        //_rigidbody.AddForce(speedFactor * _speed * Vector3.forward, ForceMode.VelocityChange);
-
-
-        //_rigidbody.velocity = new Vector3(0, _rigidbody.velocity.y, 1) * _speed;
-
-        //    float xMove = Input.GetAxisRaw("Horizontal"); // d key changes value to 1, a key changes value to -1
-        //    float zMove = Input.GetAxisRaw("Vertical"); // w key changes value to 1, s key changes value to -1
-        //    _rigidbody.velocity = new Vector3(xMove, _rigidbody.velocity.y, zMove) * _speed; // Creates velocity in direction of value equal to keypress (WASD). rb.velocity.y deals with falling + jumping by setting velocity to y. 
-
-
         _rigidbody.MovePosition(transform.position + _speed * Time.fixedDeltaTime * new Vector3(0, 0, 1));
         if (!IsGrounded())
         {
             _rigidbody.AddForce(Vector3.down * _gravity, ForceMode.VelocityChange);
         }
-        //_rigidbody.MovePosition(new Vector3(transform.position.x, 0, transform.position.z) + _speed * Time.fixedDeltaTime * new Vector3(0, 0, 1));
-
     }
 
-    private bool IsGrounded()
-    {
-        return (Physics.Raycast(_feetPos.position, Vector3.down, 1f));
-    }
+    private bool IsGrounded() { return (Physics.Raycast(_feetPos.position, Vector3.down, 1f)); }
 
 
-    private bool CanSwitchLane(int direction)
-    {
-        return !Physics.Raycast(_feetPos.position, Vector3.right * direction, 3);
-    }
+    private bool CanSwitchLane(int direction) { return !Physics.Raycast(_feetPos.position, Vector3.right * direction, 3); }
 
 
     private void Jump()
     {
         if (!IsGrounded()) return;
-        print("grounded");
+
         _rigidbody.AddForce(Vector3.up * _jumpGravity, ForceMode.Impulse);
         _animator.SetTrigger("Jump");
         AudioManager.Instance.Play("SwipeUp");
