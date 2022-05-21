@@ -8,6 +8,9 @@ public class UiManager : MonoBehaviour
     private bool _paused;
     [SerializeField] private GameObject _pauseMenu;
     [SerializeField] private Text _pausedText;
+    [SerializeField] private GameObject _gameoverPanel;
+    [SerializeField] private Text _lastScoreText;
+    [SerializeField] private Text _scoreText;
 
     public void TogglePause()
     {
@@ -33,5 +36,28 @@ public class UiManager : MonoBehaviour
         }
         _pauseMenu.SetActive(false);
         Time.timeScale = 1;
+    }
+
+    public void SetScore(float score)
+    {
+        _scoreText.text = "Score: " + Mathf.Round(score).ToString().PadLeft(9, '0');
+    }
+
+    public void EndGame()
+    {
+        TogglePause();
+        _gameoverPanel.SetActive(true);
+        _lastScoreText.text = "Last score:\n" + _scoreText.text;
+    }
+
+    public void StartGame()
+    {
+        _gameoverPanel.SetActive(false);
+        TogglePause();
+    }
+
+    private void Start()
+    {
+        TogglePause();
     }
 }

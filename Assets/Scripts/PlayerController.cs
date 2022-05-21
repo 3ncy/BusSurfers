@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,22 +13,26 @@ public class PlayerController : MonoBehaviour
     public float _gravity;
     public float _rollGravity;
     public float _jumpGravity;
-    public float _maxSpeed;
-    public float _maxVelocity;
+    //public float _maxSpeed;
+    //public float _maxVelocity;
     public Transform _feetPos;
-    private bool _moveLeft;
-    private bool _moveRight;
-    public float _moveSpeed;
+    //private bool _moveLeft;
+    //private bool _moveRight;
+    //public float _moveSpeed;
 
     [SerializeField] Rigidbody _rigidbody;
     [SerializeField] private Animator _animator;
-    [SerializeField] CapsuleCollider _collider;
+    [SerializeField] BoxCollider _triggerCollider;
 
     private ScrollAnimation _scrollAnimation;
 
     private Vector2 _cursorStartPos;
     private bool _processInput;
     private Vector2 _cursorMovementVector;
+
+    [SerializeField] UiManager _uiManager;
+    private int _score;
+    [SerializeField] int _speed2ScoreMultiplier;
 
     private void Start()
     {
@@ -99,6 +105,12 @@ public class PlayerController : MonoBehaviour
             }
         }
         #endregion
+
+
+        //todo: nejaka magie zrychlovani hrace
+        //_scoreText.text = "Score: " + Mathf.Round(_score + _speed * Time.deltaTime * _speed2ScoreMultiplier).ToString().PadLeft(9,'0');
+        _uiManager.SetScore(Time.time * _speed / 20);
+
     }
 
     private void FixedUpdate()
@@ -109,6 +121,25 @@ public class PlayerController : MonoBehaviour
             _rigidbody.AddForce(Vector3.down * _gravity, ForceMode.VelocityChange);
         }
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Obstacle"))
+        {
+            print("ded??");
+            _uiManager.EndGame();
+        }
+    }
+
+    public void ResetPlayer()
+    {
+        transform.position = new Vector3(0, 0, -95.6f);
+        _currentLane = 1;
+        _speed = 20;//tohle nekde zadat v promenne asi
+        _rigidbody.velocity = Vector3.zero;
+        _animator.Rebind();
+        _animator.Update(0f);
+    } 
 
     private bool IsGrounded() { return (Physics.Raycast(_feetPos.position, Vector3.down, 1f)); }
 
@@ -127,9 +158,7 @@ public class PlayerController : MonoBehaviour
 
     private void Roll()
     {
-        _collider.height = 0.4f;
-        _collider.center = new Vector3(0, 0.2f, 0);
-
+        _triggerCollider.center = new Vector3(0, 0.4f, 0.2f);
 
         _rigidbody.AddForce(Vector3.down * _rollGravity, ForceMode.Impulse);
         _animator.SetTrigger("Scroll");
@@ -138,8 +167,7 @@ public class PlayerController : MonoBehaviour
 
     private void RollEnd()
     {
-        _collider.height = 1f;
-        _collider.center = new Vector3(0, 0.5f, 0);
+        _triggerCollider.center = new Vector3(0, 0.6f, 0.2f);
     }
 
     private void GoLeft()
@@ -149,6 +177,7 @@ public class PlayerController : MonoBehaviour
             AudioManager.Instance.Play("SwipeMove");
             _animator.SetTrigger("Left");
             transform.position = new Vector3(_lanePositionsX[--_currentLane], transform.position.y, transform.position.z);
+            //transform.DOMoveX(_lanePositionsX[--_currentLane], 0.5f);
         }
     }
 
@@ -159,6 +188,7 @@ public class PlayerController : MonoBehaviour
             AudioManager.Instance.Play("SwipeMove");
             _animator.SetTrigger("Right");
             transform.position = new Vector3(_lanePositionsX[++_currentLane], transform.position.y, transform.position.z);
+            //transform.DOMoveX(_lanePositionsX[++_currentLane], 0.5f);
         }
     }
 }
